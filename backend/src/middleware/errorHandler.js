@@ -31,6 +31,15 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  if (err.code === '23503') {
+    return res.status(400).json({
+      success: false,
+      data:    null,
+      message: 'Referenced record does not exist',
+      errors:  null,
+    });
+  }
+
   return res.status(500).json({
     success: false,
     data:    null,
