@@ -112,3 +112,15 @@ export default function DashboardPage() {
           Sign out
         </button>
       </header>
+
+      <main className="px-6 py-6 max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-gray-900">Financial Overview</h1>
+          <p className="text-sm text-gray-500 mt-1">All figures in Ethiopian Birr (ETB)</p>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {error}
+          </div>
+        )}
