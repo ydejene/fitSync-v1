@@ -81,3 +81,15 @@ export default function DashboardPage() {
       .catch(() => setError('Failed to load dashboard data.'))
       .finally(() => setLoading(false));
   }, []);
+
+  const formatETB = (n: number) =>
+    new Intl.NumberFormat('en-ET', { style: 'currency', currency: 'ETB', minimumFractionDigits: 2 })
+      .format(n);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500 text-sm">Loading dashboard...</p>
+      </div>
+    );
+  }
