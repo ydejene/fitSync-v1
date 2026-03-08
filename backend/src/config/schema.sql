@@ -102,3 +102,35 @@ COMMENT ON TABLE  memberships IS 'Enrollment records linking members to plans.';
 COMMENT ON COLUMN memberships.end_date IS 'Expiry date for alerts.';
 COMMENT ON COLUMN memberships.enrolled_by IS 'Staff/owner who created the record.';
 
+-- =============================================================================
+-- TABLE: payments
+-- Financial ledger for all transactions
+-- =============================================================================
+
+CREATE TABLE payments (
+    payment_id       SERIAL PRIMARY KEY,
+    membership_id    INTEGER         NOT NULL
+                         REFERENCES memberships (membership_id) ON DELETE RESTRICT,
+    user_id          INTEGER         NOT NULL
+                         REFERENCES users (user_id) ON DELETE RESTRICT,
+    amount           NUMERIC(10, 2)  NOT NULL CHECK (amount > 0),
+    currency         VARCHAR(5)      NOT NULL DEFAULT 'ETB',
+    payment_method   VARCHAR(30)     NOT NULL
+                         CHECK (payment_method IN ('telebirr', 'cbe_birr', 'cash')),
+    status           VARCHAR(20)     NOT NULL DEFAULT 'pending'
+                         CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+    due_date         DATE,
+    paid_at          TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP,
+    reference_number VARCHAR(100)    UNIQUE,
+    recorded_by      INTEGER         REFERENCES users (user_id) ON DELETE SET NULL,
+    created_at       TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_payments_user_id ON payments (user_id);
+CREATE INDEX idx_payments_membership_id ON payments (membership_id);
+CREATE INDEX idx_payments_status ON payments (status);
+CREATE INDEX idx_payments_paid_at ON payments (paid_at);
+
+COMMENT ON TABLE  payments IS 'Financial ledger. Every transaction recorded.';
+COMMENT ON COLUMN payments.reference_number IS 'Transaction ID from gateway or NULL for cash.';
+COMMENT ON COLUMN payments.recorded_by IS 'Staff who manually recorded payment.';
