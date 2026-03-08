@@ -22,6 +22,15 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  if (err.code === '23505') {
+    return res.status(409).json({
+      success: false,
+      data:    null,
+      message: 'A record with that value already exists',
+      errors:  null,
+    });
+  }
+
   return res.status(500).json({
     success: false,
     data:    null,
