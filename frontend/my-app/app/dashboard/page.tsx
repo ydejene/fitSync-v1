@@ -31,3 +31,15 @@ function StatCard({ label, value, sublabel, accent }: {
     </div>
   );
 }
+
+function StatCard({ label, value, sublabel, accent }: {
+  label: string; value: string; sublabel?: string; accent?: string;
+}) {
+  return (
+    <div className={`bg-white rounded-xl border p-5 ${accent || 'border-gray-200'}`}>
+      <p className="text-sm text-gray-500 font-medium">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+      {sublabel && <p className="text-xs text-gray-400 mt-1">{sublabel}</p>}
+    </div>
+  );
+}
