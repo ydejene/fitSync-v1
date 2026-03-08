@@ -43,3 +43,16 @@ function StatCard({ label, value, sublabel, accent }: {
     </div>
   );
 }
+
+function PaymentMethodBadge({ method }: { method: string }) {
+  const styles: Record<string, string> = {
+    telebirr: 'bg-green-100 text-green-800',
+    cbe_birr: 'bg-blue-100  text-blue-800',
+    cash:     'bg-gray-100  text-gray-800',
+  };
+  return (
+    <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles[method] || 'bg-gray-100 text-gray-600'}`}>
+      {method.replace('_', ' ').toUpperCase()}
+    </span>
+  );
+}
