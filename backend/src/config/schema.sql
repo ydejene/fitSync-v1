@@ -71,3 +71,34 @@ CREATE INDEX idx_plans_active ON plans (is_active);
 COMMENT ON TABLE  plans IS 'Catalog of membership tiers. All prices are in ETB.';
 COMMENT ON COLUMN plans.duration_days IS 'Membership validity in days.';
 COMMENT ON COLUMN plans.max_classes_per_month IS 'NULL means unlimited class bookings per month.';
+
+-- =============================================================================
+-- TABLE: memberships
+-- Active link between a user and a plan
+-- =============================================================================
+
+CREATE TABLE memberships (
+    membership_id SERIAL PRIMARY KEY,
+    user_id       INTEGER        NOT NULL
+                      REFERENCES users (user_id) ON DELETE CASCADE,
+    plan_id       INTEGER        NOT NULL
+                      REFERENCES plans (plan_id) ON DELETE RESTRICT,
+    start_date    DATE           NOT NULL,
+    end_date      DATE           NOT NULL,
+    status        VARCHAR(20)    NOT NULL DEFAULT 'active'
+                      CHECK (status IN ('active', 'expired', 'cancelled', 'suspended')),
+    enrolled_by   INTEGER        REFERENCES users (user_id) ON DELETE SET NULL,
+    notes         TEXT,
+    created_at    TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_membership_dates CHECK (end_date > start_date)
+);
+
+CREATE INDEX idx_memberships_user_id ON memberships (user_id);
+CREATE INDEX idx_memberships_status ON memberships (status);
+CREATE INDEX idx_memberships_end_date ON memberships (end_date);
+
+COMMENT ON TABLE  memberships IS 'Enrollment records linking members to plans.';
+COMMENT ON COLUMN memberships.end_date IS 'Expiry date for alerts.';
+COMMENT ON COLUMN memberships.enrolled_by IS 'Staff/owner who created the record.';
+
