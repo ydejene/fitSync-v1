@@ -206,3 +206,17 @@ const login = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * POST /api/auth/logout
+ * Clears the httpOnly cookie.
+ */
+const logout = (req, res) => {
+  res.clearCookie('token');
+  return res.status(200).json({
+    success: true,
+    data:    null,
+    message: 'Logged out successfully',
+    errors:  null,
+  });
+};
