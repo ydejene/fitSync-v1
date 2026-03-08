@@ -220,3 +220,38 @@ const logout = (req, res) => {
     errors:  null,
   });
 };
+
+/**
+ * GET /api/auth/me
+ * Returns the currently authenticated user's profile.
+ */
+const me = async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT user_id, full_name, email, phone, role, status, profile_photo_url,
+              date_joined, last_login_at, created_at
+       FROM users WHERE user_id = $1`,
+      [req.user.user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        data:    null,
+        message: 'User not found',
+        errors:  null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data:    result.rows[0],
+      message: 'User profile retrieved',
+      errors:  null,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { register, login, logout, me };
