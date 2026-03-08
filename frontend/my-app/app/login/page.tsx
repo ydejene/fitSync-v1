@@ -17,4 +17,24 @@ export default function LoginPage() {
     if (msg) setMessage(msg);
   }, [searchParams]);
 
-  
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    setLoading(true);
+
+    try {
+      const response = await authAPI.login({ email, password });
+      const { role }  = response.data.data.user;
+
+      if (role === 'owner' || role === 'staff') {
+        router.push('/dashboard');
+      } else {
+        router.push('/portal');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
