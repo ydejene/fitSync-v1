@@ -99,3 +99,110 @@ const register = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * POST /api/auth/login
+ * Authenticates a user and returns a signed JWT in an httpOnly cookie.
+ */
+const login = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        data:    null,
+        message: 'Validation failed',
+        errors:  errors.array(),
+      });
+    }
+
+    const { email, password } = req.body;
+
+    // Fetch user by email
+    const result = await pool.query(
+      `SELECT user_id, full_name, email, password_hash, role, status
+       FROM users WHERE email = $1`,
+      [email.toLowerCase().trim()]
+    );
+
+    if (result.rows.length === 0) {
+      // Use the same message for missing user and wrong password to prevent enumeration
+      return res.status(401).json({
+        success: false,
+        data:    null,
+        message: 'Invalid email or password',
+        errors:  null,
+      });
+    }
+
+    const user = result.rows[0];
+
+    // Check account status before verifying password
+    if (user.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        data:    null,
+        message: 'Your account has been suspended. Please contact the gym administrator.',
+        errors:  null,
+      });
+    }
+
+    // Verify password
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({
+        success: false,
+        data:    null,
+        message: 'Invalid email or password',
+        errors:  null,
+      });
+    }
+
+    // Sign JWT
+    const tokenPayload = {
+      user_id:   user.user_id,
+      email:     user.email,
+      role:      user.role,
+      full_name: user.full_name,
+    };
+
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
+      expiresIn: JWT_EXPIRY,
+    });
+
+    // Update last_login_at
+    await pool.query(
+      'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE user_id = $1',
+      [user.user_id]
+    );
+
+    // Write to audit log
+    await audit(user.user_id, 'user.login', 'user', user.user_id,
+      { email: user.email }, req.ip);
+
+    // Set token in httpOnly cookie (XSS-safe)
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure:   process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge:   JWT_EXPIRY * 1000, // milliseconds
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        token,                      // Also returned in body for Postman / mobile clients
+        user: {
+          user_id:   user.user_id,
+          full_name: user.full_name,
+          email:     user.email,
+          role:      user.role,
+        },
+      },
+      message: 'Login successful',
+      errors:  null,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
