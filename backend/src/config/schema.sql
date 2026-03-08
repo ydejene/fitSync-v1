@@ -134,3 +134,32 @@ CREATE INDEX idx_payments_paid_at ON payments (paid_at);
 COMMENT ON TABLE  payments IS 'Financial ledger. Every transaction recorded.';
 COMMENT ON COLUMN payments.reference_number IS 'Transaction ID from gateway or NULL for cash.';
 COMMENT ON COLUMN payments.recorded_by IS 'Staff who manually recorded payment.';
+
+-- =============================================================================
+-- TABLE: events_classes
+-- Schedule of gym sessions
+-- =============================================================================
+
+CREATE TABLE events_classes (
+    event_id          SERIAL PRIMARY KEY,
+    title             VARCHAR(150)    NOT NULL,
+    description       TEXT,
+    event_type        VARCHAR(30)     CHECK (event_type IN ('class', 'event', 'workshop')),
+    instructor_id     INTEGER         REFERENCES users (user_id) ON DELETE SET NULL,
+    start_datetime    TIMESTAMPTZ     NOT NULL,
+    end_datetime      TIMESTAMPTZ     NOT NULL,
+    location          VARCHAR(100),
+    max_capacity      INTEGER         NOT NULL CHECK (max_capacity > 0),
+    current_bookings  INTEGER         NOT NULL DEFAULT 0 CHECK (current_bookings >= 0),
+    is_cancelled      BOOLEAN         NOT NULL DEFAULT FALSE,
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_event_times    CHECK (end_datetime > start_datetime),
+    CONSTRAINT chk_event_capacity CHECK (current_bookings <= max_capacity)
+);
+
+CREATE INDEX idx_events_start_datetime ON events_classes (start_datetime);
+CREATE INDEX idx_events_is_cancelled   ON events_classes (is_cancelled);
+
+COMMENT ON TABLE  events_classes IS 'Class and event schedule. Members book slots from this table.';
+COMMENT ON COLUMN events_classes.current_bookings IS 'Updated by triggers or app logic.';
