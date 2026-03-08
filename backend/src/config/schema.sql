@@ -163,3 +163,29 @@ CREATE INDEX idx_events_is_cancelled   ON events_classes (is_cancelled);
 
 COMMENT ON TABLE  events_classes IS 'Class and event schedule. Members book slots from this table.';
 COMMENT ON COLUMN events_classes.current_bookings IS 'Updated by triggers or app logic.';
+
+-- =============================================================================
+-- TABLE: bookings
+-- Real-time class reservation system.
+-- =============================================================================
+
+CREATE TABLE bookings (
+    booking_id   SERIAL PRIMARY KEY,
+    user_id      INTEGER      NOT NULL
+                     REFERENCES users (user_id) ON DELETE CASCADE,
+    event_id     INTEGER      NOT NULL
+                     REFERENCES events_classes (event_id) ON DELETE CASCADE,
+    status       VARCHAR(20)  NOT NULL DEFAULT 'confirmed'
+                     CHECK (status IN ('confirmed', 'cancelled', 'waitlisted', 'attended')),
+    booked_at    TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    cancelled_at TIMESTAMPTZ,
+    attended     BOOLEAN      NOT NULL DEFAULT FALSE,
+
+    CONSTRAINT uq_booking UNIQUE (user_id, event_id)
+);
+
+CREATE INDEX idx_bookings_user_id  ON bookings (user_id);
+CREATE INDEX idx_bookings_event_id ON bookings (event_id);
+
+COMMENT ON TABLE bookings IS 'Class reservations. UNIQUE constraint prevents duplicate bookings per member per class.';
+
