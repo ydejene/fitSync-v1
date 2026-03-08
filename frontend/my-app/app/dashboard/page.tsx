@@ -93,3 +93,22 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-900 rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm font-bold">F</span>
+          </div>
+          <span className="font-semibold text-gray-900">FitSync</span>
+          <span className="text-gray-300 text-sm">|</span>
+          <span className="text-gray-500 text-sm">Admin Dashboard</span>
+        </div>
+        <button
+          className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          onClick={() => window.location.href = '/login'}
+        >
+          Sign out
+        </button>
+      </header>
